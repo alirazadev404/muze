@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Disc3, LogOut, Radio, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "../ui/spinner";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -27,40 +28,32 @@ export default function Navbar() {
           </div>
         </Link>
 
-        <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-xs uppercase tracking-[0.24em] text-slate-300 md:flex">
-          <Radio className="h-3.5 w-3.5 text-teal-200" />
-          Live collaborative playback
-        </div>
-
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
               <Button
                 asChild
                 variant="outline"
-                className="hidden h-10 rounded-full border-white/14 bg-white/6 px-4 text-white hover:bg-white/10 sm:inline-flex"
+                className="hidden h-10 rounded-full border-white/14 bg-primary/80! px-4 text-white hover:bg-primary! sm:inline-flex"
               >
-                <Link href="/dashboard">
-                  <Sparkles className="h-4 w-4" />
-                  Dashboard
-                </Link>
+                <Link href="/dashboard">Dashboard</Link>
               </Button>
               <Button
                 variant="outline"
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="h-10 rounded-full border-white/14 bg-white/6 px-4 text-white hover:bg-white/10"
+                className="h-10 rounded-full cursor-pointer border-white/14 bg-red-500! px-4 text-white hover:bg-red-600!"
               >
                 <LogOut className="h-4 w-4" />
-                Sign out
+                Logout
               </Button>
             </>
           ) : (
             <Button
               disabled={isLoading}
               onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-              className="h-10 rounded-full bg-teal-400 px-4 text-slate-950 hover:bg-teal-300"
+              className="h-10 rounded-full cursor-pointer bg-teal-400 px-4 text-slate-950 hover:bg-teal-300"
             >
-              {isLoading ? "Loading" : "Sign in"}
+              {isLoading ? <Spinner /> : "Sign in"}
             </Button>
           )}
         </div>

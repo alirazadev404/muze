@@ -25,6 +25,7 @@ import {
   getNowPlayingStream,
   getQueuedStreams,
 } from "@/components/dashboard/utils";
+import { usePathname } from "next/navigation";
 
 type CreatorWorkspaceProps = {
   creator: DashboardCreator;
@@ -42,6 +43,7 @@ export default function CreatorWorkspace({
   participantSignedIn,
 }: CreatorWorkspaceProps) {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const [currentVideo, setCurrentVideo] =
     useState<CurrentVideo>(initialCurrentVideo);
   const [streams, setStreams] = useState(initialStreams);
@@ -337,6 +339,7 @@ export default function CreatorWorkspace({
     await navigator.clipboard.writeText(shareUrl);
     toast.success("Creator share link copied.");
   };
+  const isCreator = pathname.includes("creator");
 
   return (
     <main className="relative min-h-screen overflow-hidden px-4 pb-14 pt-28 sm:px-6 lg:px-8">
@@ -372,14 +375,17 @@ export default function CreatorWorkspace({
           onPlayNow={handlePlayNow}
           onDelete={handleDelete}
         />
-        <ShareUrlSection
-          creator={creator}
-          mode={mode}
-          nowPlaying={nowPlaying}
-          queueLength={queuedStreams.length}
-          totalVotes={totalVotes}
-          onCopyShareUrl={copyShareUrl}
-        />
+
+        {!isCreator && (
+          <ShareUrlSection
+            creator={creator}
+            mode={mode}
+            nowPlaying={nowPlaying}
+            queueLength={queuedStreams.length}
+            totalVotes={totalVotes}
+            onCopyShareUrl={copyShareUrl}
+          />
+        )}
       </div>
     </main>
   );
