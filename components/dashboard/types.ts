@@ -6,6 +6,8 @@ export type DashboardStream = Streams;
 
 export type DashboardCreator = CreatorSummary;
 
+export type CurrentVideo = Streams | null;
+
 export type VideoPreview = {
   url: string;
   videoId: string;

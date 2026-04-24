@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { getCurrentVideoForCreator } from "@/lib/current-video-store";
 
 type RawStream = Awaited<ReturnType<typeof prisma.stream.findMany>>[number] & {
   _count?: {
@@ -30,6 +31,12 @@ export type SerializedStream = {
   hasUpvoted: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type CreatorWorkspace = {
+  creator: CreatorProfile;
+  currentVideo: SerializedStream | null;
+  streams: SerializedStream[];
 };
 
 function formatCreator(email: string, id: string): CreatorProfile {
@@ -71,7 +78,7 @@ function serializeStream(stream: RawStream): SerializedStream {
 export async function getCreatorWorkspace(
   creatorId: string,
   viewerId?: string | null,
-) {
+): Promise<CreatorWorkspace | null> {
   const [creator, streams] = await Promise.all([
     prisma.user.findUnique({
       where: { id: creatorId },
@@ -101,13 +108,14 @@ export async function getCreatorWorkspace(
     return null;
   }
 
-  const serializedStreams = (streams as RawStream[])
-    .map(serializeStream)
+  const serializedStreams = (streams as RawStream[]).map(serializeStream);
+  const storedCurrentVideo = getCurrentVideoForCreator(creatorId);
+  const dbCurrentVideo =
+    serializedStreams.find((stream) => stream.active) ?? null;
+  const currentVideo = storedCurrentVideo ?? dbCurrentVideo;
+  const queueStreams = serializedStreams
+    .filter((stream) => stream.id !== currentVideo?.id)
     .sort((left, right) => {
-      if (left.active !== right.active) {
-        return left.active ? -1 : 1;
-      }
-
       if (left.upvotes !== right.upvotes) {
         return right.upvotes - left.upvotes;
       }
@@ -119,6 +127,7 @@ export async function getCreatorWorkspace(
 
   return {
     creator: formatCreator(creator.email, creator.id),
-    streams: serializedStreams,
+    currentVideo,
+    streams: queueStreams,
   };
 }

@@ -5,32 +5,29 @@ import {
   getYouTubeThumbnailUrl,
 } from "@/lib/utils";
 import type {
+  CurrentVideo,
   DashboardStream,
   VideoPreview,
 } from "@/components/dashboard/types";
 
 export function sortDashboardStreams(streams: DashboardStream[]) {
   return [...streams].sort((left, right) => {
-    if (left.active !== right.active) {
-      return left.active ? -1 : 1;
-    }
-
     if (left.upvotes !== right.upvotes) {
       return right.upvotes - left.upvotes;
     }
 
-    return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
+    return (
+      new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()
+    );
   });
 }
 
-export function getNowPlayingStream(streams: DashboardStream[]) {
-  return sortDashboardStreams(streams).find((stream) => stream.active) ?? streams[0] ?? null;
+export function getNowPlayingStream(currentVideo: CurrentVideo) {
+  return currentVideo ?? null;
 }
 
 export function getQueuedStreams(streams: DashboardStream[]) {
-  const nowPlaying = getNowPlayingStream(streams);
-
-  return sortDashboardStreams(streams).filter((stream) => stream.id !== nowPlaying?.id);
+  return sortDashboardStreams(streams);
 }
 
 export function getPreviewThumbnail(

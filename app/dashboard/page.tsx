@@ -23,6 +23,7 @@ export default async function DashboardPage() {
   return (
     <CreatorWorkspace
       creator={workspace.creator}
+      initialCurrentVideo={workspace.currentVideo}
       initialStreams={workspace.streams}
       mode="creator"
       participantSignedIn

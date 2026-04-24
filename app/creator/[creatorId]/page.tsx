@@ -18,6 +18,7 @@ export default async function CreatorRoomPage(
   return (
     <CreatorWorkspace
       creator={workspace.creator}
+      initialCurrentVideo={workspace.currentVideo}
       initialStreams={workspace.streams}
       mode="viewer"
       participantSignedIn={Boolean(session?.user)}

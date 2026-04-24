@@ -24,6 +24,7 @@ export type CreatorSummary = {
 };
 
 export type StreamsList = {
+  currentVideo: Streams | null;
   creator: CreatorSummary;
   streams: Streams[];
 };

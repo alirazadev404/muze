@@ -36,14 +36,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const hasActiveStream = await prisma.stream.findFirst({
-      where: {
-        userId: data.streamerId,
-        active: true,
-      },
-      select: { id: true },
-    });
-
     const stream = await prisma.stream.create({
       data: {
         userId: data.streamerId,
@@ -56,7 +48,7 @@ export async function POST(req: NextRequest) {
         mThumbnail: ytDetail.mThumbnail,
         bThumbnail: ytDetail.bThumbnail,
         description: ytDetail.description,
-        active: !hasActiveStream,
+        active: false,
       },
     });
 

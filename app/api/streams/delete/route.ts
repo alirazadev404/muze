@@ -1,16 +1,15 @@
 import { authOptions } from "@/lib/auth";
-import { setCurrentVideoForCreator } from "@/lib/current-video-store";
 import { prisma } from "@/lib/db";
 import { getCreatorWorkspace } from "@/lib/stream-data";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-const currentVideoSchema = z.object({
+const deleteStreamSchema = z.object({
   streamId: z.string().min(1),
 });
 
-export async function POST(req: NextRequest) {
+export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user.id) {
@@ -21,43 +20,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const data = currentVideoSchema.parse(await req.json());
+    const data = deleteStreamSchema.parse(await req.json());
     const stream = await prisma.stream.findUnique({
       where: { id: data.streamId },
-      include: {
-        _count: {
-          select: {
-            upvotes: true,
-          },
-        },
-      },
+      select: { id: true, userId: true },
     });
 
     if (!stream || stream.userId !== session.user.id) {
       return NextResponse.json(
-        { message: "You can only change your own queue." },
+        { message: "You can only delete videos from your own queue." },
         { status: 403 },
       );
     }
-
-    setCurrentVideoForCreator(session.user.id, {
-      id: stream.id,
-      type: stream.type,
-      url: stream.url,
-      title: stream.title,
-      sThumbnail: stream.sThumbnail,
-      mThumbnail: stream.mThumbnail,
-      bThumbnail: stream.bThumbnail,
-      description: stream.description,
-      channel: stream.channel,
-      userId: stream.userId,
-      active: true,
-      extractedId: stream.extractedId,
-      hasUpvoted: false,
-      upvotes: stream._count.upvotes,
-      createdAt: stream.createdAt.toISOString(),
-      updatedAt: stream.updatedAt.toISOString(),
-    });
 
     await prisma.$transaction([
       prisma.upvote.deleteMany({
@@ -71,15 +45,15 @@ export async function POST(req: NextRequest) {
     const workspace = await getCreatorWorkspace(session.user.id, session.user.id);
 
     return NextResponse.json({
-      message: "Now playing updated.",
+      message: "Video removed from the queue.",
       currentVideo: workspace?.currentVideo ?? null,
       streams: workspace?.streams ?? [],
     });
   } catch (error) {
-    console.error("[POST /api/streams/currentVideo]:", error);
+    console.error("[DELETE /api/streams/delete]:", error);
 
     return NextResponse.json(
-      { message: "Failed to update the current video." },
+      { message: "Failed to delete the video." },
       { status: 400 },
     );
   }
