@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import {
   startTransition,
   useDeferredValue,
@@ -14,7 +14,6 @@ import {
   ArrowUpRight,
   Copy,
   ExternalLink,
-  Heart,
   ListMusic,
   Loader2,
   PlayCircle,
@@ -75,6 +74,7 @@ export default function CreatorWorkspace({
   mode,
   participantSignedIn,
 }: CreatorWorkspaceProps) {
+  const { data: session, status } = useSession();
   const [streams, setStreams] = useState(initialStreams);
   const [url, setUrl] = useState("");
   const deferredUrl = useDeferredValue(url);
@@ -92,9 +92,11 @@ export default function CreatorWorkspace({
   const queuedStreams = getQueuedStreams(streams);
   const totalVotes = streams.reduce((sum, stream) => sum + stream.upvotes, 0);
   const isCreatorMode = mode === "creator";
+  const isAuthenticated =
+    status === "authenticated" && Boolean(session?.user || participantSignedIn);
 
   const ensureSignedIn = async () => {
-    if (participantSignedIn) {
+    if (isAuthenticated) {
       return true;
     }
 
@@ -446,7 +448,9 @@ export default function CreatorWorkspace({
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.28em] text-slate-400">
-                  Now playing
+                  {isCreatorMode
+                    ? "Now playing"
+                    : `${creator.displayName} live room`}
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-white">
                   {nowPlaying?.title ?? "Queue is waiting for the first video"}
@@ -594,6 +598,21 @@ export default function CreatorWorkspace({
                   ? "The first queued video can be moved into now playing with one click. Everything else stays open for submissions and voting."
                   : "This public room keeps the interface familiar, but only the creator can promote the next video into playback."}
               </p>
+              {!isCreatorMode && !isAuthenticated && (
+                <Button
+                  onClick={() =>
+                    signIn("google", {
+                      callbackUrl:
+                        typeof window === "undefined"
+                          ? `/creator/${creator.id}`
+                          : window.location.href,
+                    })
+                  }
+                  className="mt-4 h-11 rounded-xl bg-teal-400 text-slate-950 hover:bg-teal-300"
+                >
+                  Sign in with Google to vote
+                </Button>
+              )}
             </section>
           </div>
         </section>

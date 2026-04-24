@@ -6,7 +6,9 @@ import { Disc3, LogOut, Radio, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
-  const session = useSession();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated" && Boolean(session?.user);
+  const isLoading = status === "loading";
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 px-4 py-4 sm:px-6 lg:px-8">
@@ -31,7 +33,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          {session.data?.user ? (
+          {isAuthenticated ? (
             <>
               <Button
                 asChild
@@ -49,15 +51,16 @@ export default function Navbar() {
                 className="h-10 rounded-full border-white/14 bg-white/6 px-4 text-white hover:bg-white/10"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                Sign out
               </Button>
             </>
           ) : (
             <Button
+              disabled={isLoading}
               onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
               className="h-10 rounded-full bg-teal-400 px-4 text-slate-950 hover:bg-teal-300"
             >
-              Sign in
+              {isLoading ? "Loading" : "Sign in"}
             </Button>
           )}
         </div>
